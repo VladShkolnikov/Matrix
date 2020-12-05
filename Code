@@ -1,0 +1,93 @@
+class Node():
+    def __init__(self,Id):
+        self.links=set()
+        self.machine=False
+        self.nul=0
+        self.one=0
+       
+
+class Graph():
+    def __init__(self,roads,machines):
+        self.nodes=[Node(i) for i in range(n)]
+        self.lengths={}
+        for machine in machines:
+            self.nodes[machine].machine=True
+        for road in roads:
+            self.nodes[road[0]].links.add(road[1]) 
+            self.nodes[road[1]].links.add(road[0])
+            self.lengths[(road[0],road[1])]=road[2]
+            self.lengths[(road[1],road[0])]=road[2]
+
+            
+    def build_tree(self,node=0):
+        for link in self.nodes[node].links:
+            self.nodes[link].links.remove(node)
+            self.build_tree(link)
+            
+    def traverse(self,node=0):
+        if self.nodes[node].machine:
+            self.nodes[node].nul=math.inf
+            for link in self.nodes[node].links:
+                self.traverse(link)
+                self.nodes[node].one+=min(self.nodes[link].one+self.lengths[(node,link)],self.nodes[link].nul)
+        else:
+            tmp=[]
+            for link in self.nodes[node].links:
+                self.traverse(link)
+                tmp.append(min(self.nodes[link].one+self.lengths[(node,link)],self.nodes[link].nul))
+                self.nodes[node].nul+=tmp[-1]
+            cost=math.inf
+            for c,link in enumerate(self.nodes[node].links):
+                cost=min(cost,self.nodes[node].nul-tmp[c]+self.nodes[link].one)
+            self.nodes[node].one=cost
+        return min(self.nodes[node].nul,self.nodes[node].one)
+            
+            
+            
+            
+            
+def traverse(graph,node,back=None):
+    if graph.nodes[node].machine and back!=None:
+        return [node]
+    for link in graph.nodes[node].links:
+        if link!=back:
+            tmp=traverse(graph,link,node) 
+            if tmp!=None:
+                path=[node]+tmp
+                return path
+    return None
+           
+def solve(graph,machines):
+    res=0
+    print(machines)
+    for k in range(len(machines)):
+        while True:
+            path=traverse(graph,machines[k],back=None)  
+            Min=math.inf
+            if path==None:
+                break
+            for i in range(1,len(path)):
+                tmp=graph.lengths[(path[i],path[i-1])]
+                if tmp<Min:
+                    Min=tmp
+                    p1=path[i]
+                    p2=path[i-1]
+            graph.nodes[p1].links.remove(p2)
+            graph.nodes[p2].links.remove(p1)
+            res+=Min
+    return res
+            
+            
+def minTime(roads, machines):
+    
+    graph=Graph(roads,machines)
+    graph.build_tree()
+    
+    return graph.traverse()
+    
+    
+   
+def minTime1(roads, machines):
+    graph=Graph(roads,machines)
+
+    return(solve(graph,machines))       
